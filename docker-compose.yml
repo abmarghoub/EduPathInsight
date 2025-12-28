@@ -1,0 +1,539 @@
+version: '3.8'
+
+services:
+  # Base de données PostgreSQL pour auth-service
+  postgres-auth:
+    image: postgres:15-alpine
+    container_name: edupath-postgres-auth
+    environment:
+      POSTGRES_DB: edupath_auth
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-auth-data:/var/lib/postgresql/data
+    networks:
+      - edupath-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Base de données PostgreSQL pour data-ingestion (features AI)
+  postgres-features:
+    image: postgres:15-alpine
+    container_name: edupath-postgres-features
+    environment:
+      POSTGRES_DB: edupath_features
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres-features-data:/var/lib/postgresql/data
+    networks:
+      - edupath-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Base de données PostgreSQL pour module-service
+  postgres-modules:
+    image: postgres:15-alpine
+    container_name: edupath-postgres-modules
+    environment:
+      POSTGRES_DB: edupath_modules
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5434:5432"
+    volumes:
+      - postgres-modules-data:/var/lib/postgresql/data
+    networks:
+      - edupath-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Base de données PostgreSQL pour note-service
+  postgres-notes:
+    image: postgres:15-alpine
+    container_name: edupath-postgres-notes
+    environment:
+      POSTGRES_DB: edupath_notes
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5435:5432"
+    volumes:
+      - postgres-notes-data:/var/lib/postgresql/data
+    networks:
+      - edupath-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Base de données PostgreSQL pour activities-service
+  postgres-activities:
+    image: postgres:15-alpine
+    container_name: edupath-postgres-activities
+    environment:
+      POSTGRES_DB: edupath_activities
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5436:5432"
+    volumes:
+      - postgres-activities-data:/var/lib/postgresql/data
+    networks:
+      - edupath-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Base de données PostgreSQL pour prediction-ia-service
+  postgres-predictions:
+    image: postgres:15-alpine
+    container_name: edupath-postgres-predictions
+    environment:
+      POSTGRES_DB: edupath_predictions
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5437:5432"
+    volumes:
+      - postgres-predictions-data:/var/lib/postgresql/data
+    networks:
+      - edupath-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Base de données PostgreSQL pour explainability-service
+  postgres-explainability:
+    image: postgres:15-alpine
+    container_name: edupath-postgres-explainability
+    environment:
+      POSTGRES_DB: edupath_explainability
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5438:5432"
+    volumes:
+      - postgres-explainability-data:/var/lib/postgresql/data
+    networks:
+      - edupath-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Base de données PostgreSQL pour notification-service
+  postgres-notifications:
+    image: postgres:15-alpine
+    container_name: edupath-postgres-notifications
+    environment:
+      POSTGRES_DB: edupath_notifications
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5439:5432"
+    volumes:
+      - postgres-notifications-data:/var/lib/postgresql/data
+    networks:
+      - edupath-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Neo4j pour le graphe
+  neo4j:
+    image: neo4j:5-community
+    container_name: edupath-neo4j
+    environment:
+      NEO4J_AUTH: neo4j/password
+      NEO4J_PLUGINS: '["apoc"]'
+    ports:
+      - "7687:7687"
+      - "7474:7474"
+    volumes:
+      - neo4j-data:/data
+    networks:
+      - edupath-network
+    healthcheck:
+      test: ["CMD", "cypher-shell", "-u", "neo4j", "-p", "password", "RETURN 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # MongoDB pour activities-service
+  mongodb:
+    image: mongo:7
+    container_name: edupath-mongodb
+    environment:
+      MONGO_INITDB_DATABASE: edupath_activities
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb-data:/data/db
+    networks:
+      - edupath-network
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # RabbitMQ
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: edupath-rabbitmq
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq
+    networks:
+      - edupath-network
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis pour prediction-ia-service
+  redis:
+    image: redis:7-alpine
+    container_name: edupath-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    networks:
+      - edupath-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Eureka Server
+  eureka-server:
+    build:
+      context: ./eureka-server
+      dockerfile: Dockerfile
+    container_name: edupath-eureka-server
+    ports:
+      - "8761:8761"
+    networks:
+      - edupath-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8761/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # API Gateway
+  api-gateway:
+    build:
+      context: ./api-gateway
+      dockerfile: Dockerfile
+    container_name: edupath-api-gateway
+    ports:
+      - "8080:8080"
+    depends_on:
+      eureka-server:
+        condition: service_healthy
+      postgres-auth:
+        condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE: http://eureka-server:8761/eureka/
+    networks:
+      - edupath-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # Auth Service
+  auth-service:
+    build:
+      context: ./auth-service
+      dockerfile: Dockerfile
+    container_name: edupath-auth-service
+    ports:
+      - "8081:8081"
+    depends_on:
+      eureka-server:
+        condition: service_healthy
+      postgres-auth:
+        condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-auth:5432/edupath_auth
+      EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE: http://eureka-server:8761/eureka/
+    networks:
+      - edupath-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8081/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # Data Ingestion Service
+  data-ingestion-service:
+    build:
+      context: ./data-ingestion-service
+      dockerfile: Dockerfile
+    container_name: edupath-data-ingestion-service
+    ports:
+      - "8082:8082"
+    depends_on:
+      eureka-server:
+        condition: service_healthy
+      postgres-features:
+        condition: service_healthy
+      neo4j:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-features:5432/edupath_features
+      SPRING_NEO4J_URI: bolt://neo4j:7687
+      SPRING_NEO4J_AUTHENTICATION_USERNAME: neo4j
+      SPRING_NEO4J_AUTHENTICATION_PASSWORD: password
+      SPRING_RABBITMQ_HOST: rabbitmq
+      EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE: http://eureka-server:8761/eureka/
+    networks:
+      - edupath-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8082/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # Module Service
+  module-service:
+    build:
+      context: ./module-service
+      dockerfile: Dockerfile
+    container_name: edupath-module-service
+    ports:
+      - "8083:8083"
+    depends_on:
+      eureka-server:
+        condition: service_healthy
+      postgres-modules:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-modules:5432/edupath_modules
+      SPRING_RABBITMQ_HOST: rabbitmq
+      EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE: http://eureka-server:8761/eureka/
+    networks:
+      - edupath-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8083/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # Note Service
+  note-service:
+    build:
+      context: ./note-service
+      dockerfile: Dockerfile
+    container_name: edupath-note-service
+    ports:
+      - "8084:8084"
+    depends_on:
+      eureka-server:
+        condition: service_healthy
+      postgres-notes:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-notes:5432/edupath_notes
+      SPRING_RABBITMQ_HOST: rabbitmq
+      EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE: http://eureka-server:8761/eureka/
+    networks:
+      - edupath-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8084/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # Activities Service (Flask)
+  activities-service:
+    build:
+      context: ./activities-service
+      dockerfile: Dockerfile
+    container_name: edupath-activities-service
+    ports:
+      - "5000:5000"
+    depends_on:
+      postgres-activities:
+        condition: service_healthy
+      mongodb:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@postgres-activities:5432/edupath_activities
+      MONGODB_URI: mongodb://mongodb:27017/edupath_activities
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_PORT: 5672
+      RABBITMQ_USER: guest
+      RABBITMQ_PASSWORD: guest
+    networks:
+      - edupath-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # Prediction IA Service (FastAPI)
+  prediction-ia-service:
+    build:
+      context: ./prediction-ia-service
+      dockerfile: Dockerfile
+    container_name: edupath-prediction-ia-service
+    ports:
+      - "8001:8001"
+    depends_on:
+      postgres-predictions:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@postgres-predictions:5432/edupath_predictions
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_PORT: 5672
+    networks:
+      - edupath-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8001/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
+  # Explainability Service (Flask)
+  explainability-service:
+    build:
+      context: ./explainability-service
+      dockerfile: Dockerfile
+    container_name: edupath-explainability-service
+    ports:
+      - "5001:5001"
+    depends_on:
+      postgres-explainability:
+        condition: service_healthy
+      prediction-ia-service:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@postgres-explainability:5432/edupath_explainability
+      PREDICTION_SERVICE_URL: http://prediction-ia-service:8001
+    networks:
+      - edupath-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5001/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # Notification Service
+  notification-service:
+    build:
+      context: ./notification-service
+      dockerfile: Dockerfile
+    container_name: edupath-notification-service
+    ports:
+      - "8085:8085"
+    depends_on:
+      eureka-server:
+        condition: service_healthy
+      postgres-notifications:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-notifications:5432/edupath_notifications
+      SPRING_RABBITMQ_HOST: rabbitmq
+      EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE: http://eureka-server:8761/eureka/
+    networks:
+      - edupath-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8085/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # Admin Frontend (React)
+  admin-frontend:
+    build:
+      context: ./admin-frontend
+      dockerfile: Dockerfile
+    container_name: edupath-admin-frontend
+    ports:
+      - "3003:80"
+    depends_on:
+      - api-gateway
+    networks:
+      - edupath-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:80"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+networks:
+  edupath-network:
+    driver: bridge
+
+volumes:
+  postgres-auth-data:
+  postgres-features-data:
+  postgres-modules-data:
+  postgres-notes-data:
+  postgres-activities-data:
+  postgres-predictions-data:
+  postgres-explainability-data:
+  postgres-notifications-data:
+  neo4j-data:
+  mongodb-data:
+  rabbitmq-data:
+  redis-data:
+

@@ -1,0 +1,97 @@
+server:
+  port: 8085
+
+spring:
+  application:
+    name: notification-service
+  
+  datasource:
+    url: jdbc:postgresql://localhost:5432/edupath_notifications
+    username: postgres
+    password: postgres
+    driver-class-name: org.postgresql.Driver
+  
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+  
+  rabbitmq:
+    host: localhost
+    port: 5672
+    username: guest
+    password: guest
+    template:
+      exchange: edupath.exchange
+      default-receive-queue: notification.queue
+      routing-key: notification.routing.key
+  
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: ${EMAIL_USERNAME:edupathinsight@gmail.com}
+    password: ${EMAIL_PASSWORD:your-email-password}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+            required: true
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+    register-with-eureka: true
+    fetch-registry: true
+  instance:
+    hostname: localhost
+    prefer-ip-address: true
+
+# Configuration des notifications
+notification:
+  email:
+    enabled: true
+    from: ${EMAIL_USERNAME:edupathinsight@gmail.com}
+    from-name: EduPath Insight
+  push:
+    enabled: true
+  dashboard:
+    enabled: true
+    retention-days: 30
+
+# Configuration des alertes
+alerts:
+  enabled: true
+  types:
+    - HIGH_RISK_STUDENT
+    - RISK_MODULE
+    - ANOMALY_DETECTED
+    - ENROLLMENT_CREATED
+    - ENROLLMENT_APPROVED
+    - ENROLLMENT_REJECTED
+    - ENROLLMENT_CANCELLED
+    - PRESENCE_RECORDED
+    - ACTIVITY_RECORDED
+    - ALERT_CREATED
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: always
+
+logging:
+  level:
+    org.springframework.data.jpa: INFO
+    org.hibernate: INFO
+
+

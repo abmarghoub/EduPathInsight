@@ -1,0 +1,95 @@
+server:
+  port: 8082
+
+spring:
+  application:
+    name: data-ingestion-service
+  
+  # Configuration Neo4j
+  neo4j:
+    uri: bolt://localhost:7687
+    authentication:
+      username: neo4j
+      password: password
+  
+  # Configuration PostgreSQL pour features AI
+  datasource:
+    url: jdbc:postgresql://localhost:5432/edupath_features
+    username: postgres
+    password: postgres
+    driver-class-name: org.postgresql.Driver
+  
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+  
+  # Configuration RabbitMQ
+  rabbitmq:
+    host: localhost
+    port: 5672
+    username: guest
+    password: guest
+    template:
+      exchange: edupath.exchange
+      routing-key: edupath.routing.key
+
+# Eureka
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+    register-with-eureka: true
+    fetch-registry: true
+  instance:
+    hostname: localhost
+    prefer-ip-address: true
+
+# Feign Client
+feign:
+  client:
+    config:
+      default:
+        connectTimeout: 5000
+        readTimeout: 5000
+
+# Configuration des services externes
+services:
+  auth-service: http://auth-service
+  user-service: http://user-service
+  course-service: http://course-service
+  path-service: http://path-service
+  ai-service: http://localhost:8000  # FastAPI Python service
+
+# Configuration fichiers
+file:
+  upload:
+    max-size: 10MB
+    allowed-types: csv,xlsx,xls
+    temp-dir: ./temp/uploads
+
+# Configuration traitement
+processing:
+  batch-size: 100
+  enable-async: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: always
+
+logging:
+  level:
+    org.springframework.data.neo4j: INFO
+    org.hibernate: INFO
+
+

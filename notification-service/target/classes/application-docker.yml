@@ -1,0 +1,62 @@
+server:
+  port: 8085
+
+spring:
+  application:
+    name: notification-service
+  datasource:
+    url: jdbc:postgresql://postgres-notifications:5432/edupath_notifications
+    username: postgres
+    password: postgres
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+  rabbitmq:
+    host: rabbitmq
+    port: 5672
+    username: guest
+    password: guest
+    template:
+      exchange: edupath.exchange
+      default-receive-queue: notification.queue
+      routing-key: notification.routing.key
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: ${EMAIL_USERNAME:edupathinsight@gmail.com}
+    password: ${EMAIL_PASSWORD:your-email-password}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+            required: true
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://eureka-server:8761/eureka/
+    register-with-eureka: true
+    fetch-registry: true
+  instance:
+    hostname: notification-service
+    prefer-ip-address: true
+
+notification:
+  email:
+    enabled: true
+    from: ${EMAIL_USERNAME:edupathinsight@gmail.com}
+    from-name: EduPath Insight
+  push:
+    enabled: true
+  dashboard:
+    enabled: true
+    retention-days: 30
+
+

@@ -1,0 +1,125 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: api-gateway
+  cloud:
+    gateway:
+      discovery:
+        locator:
+          enabled: true
+          lower-case-service-id: true
+      routes:
+        # Route pour le service d'authentification
+        - id: auth-service
+          uri: lb://auth-service
+          predicates:
+            - Path=/api/auth/**
+        
+        # Route pour le service d'ingestion de données
+        - id: data-ingestion-service
+          uri: lb://data-ingestion-service
+          predicates:
+            - Path=/api/ingestion/**
+        
+        # Route pour le service utilisateur (exemple)
+        - id: user-service
+          uri: lb://user-service
+          predicates:
+            - Path=/api/users/**
+          filters:
+            - StripPrefix=1
+        
+        # Route pour le service de modules
+        - id: module-service
+          uri: lb://module-service
+          predicates:
+            - Path=/api/modules/**
+        
+        # Route pour le service de notes
+        - id: note-service
+          uri: lb://note-service
+          predicates:
+            - Path=/api/notes/**
+        
+        # Route pour le service d'activités
+        - id: activities-service
+          uri: http://localhost:5000
+          predicates:
+            - Path=/api/activities/**
+        
+        # Route pour le service de prédiction IA
+        - id: prediction-ia-service
+          uri: http://localhost:8001
+          predicates:
+            - Path=/api/predictions/**,/api/trajectories/**,/api/training/**
+        
+        # Route pour le service d'explicabilité
+        - id: explainability-service
+          uri: http://localhost:5001
+          predicates:
+            - Path=/api/explainability/**
+        
+        # Route pour le service de notifications
+        - id: notification-service
+          uri: lb://notification-service
+          predicates:
+            - Path=/api/notifications/**
+        
+        # Route pour le service de cours (exemple)
+        - id: course-service
+          uri: lb://course-service
+          predicates:
+            - Path=/api/courses/**
+          filters:
+            - StripPrefix=1
+        
+        # Route pour le service de parcours éducatif (exemple)
+        - id: path-service
+          uri: lb://path-service
+          predicates:
+            - Path=/api/paths/**
+          filters:
+            - StripPrefix=1
+        
+        # Route pour les endpoints publics
+        - id: public-routes
+          uri: lb://public-service
+          predicates:
+            - Path=/api/public/**
+          filters:
+            - StripPrefix=1
+      
+      default-filters:
+        - DedupeResponseHeader=Access-Control-Allow-Origin
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+    register-with-eureka: true
+    fetch-registry: true
+  instance:
+    hostname: localhost
+    prefer-ip-address: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,gateway
+  endpoint:
+    health:
+      show-details: always
+
+# Configuration JWT
+jwt:
+  secret: ${JWT_SECRET:mySecretKeyForJWTTokenGenerationAndValidationShouldBeAtLeast256BitsLong}
+  expiration: 86400000 # 24 heures en millisecondes
+
+logging:
+  level:
+    org.springframework.cloud.gateway: DEBUG
+    org.springframework.security: DEBUG
+

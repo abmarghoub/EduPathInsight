@@ -1,0 +1,82 @@
+server:
+  port: 8084
+
+spring:
+  application:
+    name: note-service
+  
+  datasource:
+    url: jdbc:postgresql://localhost:5432/edupath_notes
+    username: postgres
+    password: postgres
+    driver-class-name: org.postgresql.Driver
+  
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+  
+  rabbitmq:
+    host: localhost
+    port: 5672
+    username: guest
+    password: guest
+    template:
+      exchange: edupath.exchange
+      routing-key: note.routing.key
+  
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+    register-with-eureka: true
+    fetch-registry: true
+  instance:
+    hostname: localhost
+    prefer-ip-address: true
+
+feign:
+  client:
+    config:
+      default:
+        connectTimeout: 5000
+        readTimeout: 30000
+
+services:
+  data-ingestion-service: http://data-ingestion-service
+
+# Configuration des alertes
+alerts:
+  low-grade-threshold: 10.0  # Seuil pour notes basses
+  average-grade-threshold: 12.0  # Seuil pour moyenne faible
+  failing-grade-threshold: 10.0  # Seuil pour échec
+
+# Configuration KPIs
+kpi:
+  calculation-enabled: true
+  auto-calculate: true  # Calcul automatique lors de l'ajout/modification de notes
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: always
+
+logging:
+  level:
+    org.springframework.data.jpa: INFO
+    org.hibernate: INFO
+
+

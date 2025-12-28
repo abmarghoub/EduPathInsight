@@ -1,0 +1,72 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: api-gateway
+  cloud:
+    gateway:
+      routes:
+        # Route pour le service d'authentification
+        - id: auth-service
+          uri: lb://auth-service
+          predicates:
+            - Path=/api/auth/**
+        
+        # Route pour le service d'ingestion de données
+        - id: data-ingestion-service
+          uri: lb://data-ingestion-service
+          predicates:
+            - Path=/api/ingestion/**
+        
+        # Route pour le service de modules
+        - id: module-service
+          uri: lb://module-service
+          predicates:
+            - Path=/api/modules/**
+        
+        # Route pour le service de notes
+        - id: note-service
+          uri: lb://note-service
+          predicates:
+            - Path=/api/notes/**
+        
+        # Route pour le service d'activités
+        - id: activities-service
+          uri: http://activities-service:5000
+          predicates:
+            - Path=/api/activities/**
+        
+        # Route pour le service de prédiction IA
+        - id: prediction-ia-service
+          uri: http://prediction-ia-service:8001
+          predicates:
+            - Path=/api/predictions/**,/api/trajectories/**,/api/training/**
+        
+        # Route pour le service d'explicabilité
+        - id: explainability-service
+          uri: http://explainability-service:5001
+          predicates:
+            - Path=/api/explainability/**
+        
+        # Route pour le service de notifications
+        - id: notification-service
+          uri: lb://notification-service
+          predicates:
+            - Path=/api/notifications/**
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://eureka-server:8761/eureka/
+    register-with-eureka: true
+    fetch-registry: true
+  instance:
+    hostname: api-gateway
+    prefer-ip-address: true
+
+jwt:
+  secret: your-secret-key-change-in-production-very-long-and-secure-key
+  expiration: 86400000
+
+
